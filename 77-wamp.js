@@ -3,15 +3,19 @@ module.exports = function (RED) {
     var events = require("events");
     var autobahn = require("autobahn");
     var settings = RED.settings;
+    var cryptojs = require("crypto-js");
 
     function WampClientNode(config) {
         RED.nodes.createNode(this, config);
         
         this.address = config.address;
         this.realm = config.realm;
+        this.authId = config.authId;
+        this.password = config.password;
+
 
         this.wampClient = function () {
-            return wampClientPool.get(this.address, this.realm);
+            return wampClientPool.get(this.address, this.realm, this.authId, this.password);
         };
 
         this.on = function (a, b) {
@@ -178,7 +182,7 @@ module.exports = function (RED) {
     var wampClientPool = (function () {
         var connections = {};
         return {
-            get: function (address, realm) {
+            get: function (address, realm, authid, password) {
                 var uri = realm + "@" + address;
                 if (!connections[uri]) {
                     connections[uri] = (function () {
@@ -271,11 +275,27 @@ module.exports = function (RED) {
                             obj._connecting = true;
                             obj._connected = false;
                             obj._emitter.emit("closed");
-                            var options = {url: address, realm: realm, retry_if_unreachable: true, max_retries: -1};
+                            var options = {
+                                url: address,
+                                realm: realm,
+                                retry_if_unreachable: true,
+                                max_retries: -1,
+                                authmethods: ['wampcra'],
+                                authid: authid,
+                                onchallenge: function (session, method, extra) {
+                                    var derivedKey = cryptojs.PBKDF2(password, extra.salt, {
+                                        iterations: extra.iterations,
+                                        hasher: cryptojs.algo.SHA256,
+                                        keySize: ((extra.keylen * 8) / 32)
+                                    }).toString(cryptojs.enc.Base64);
+                                    return autobahn.auth_cra.sign(derivedKey, extra.challenge);
+                                }
+                            };
+
                             obj.wampConnection = new autobahn.Connection(options);
 
                             obj.wampConnection.onopen = function (session) {
-                                RED.log.info("wamp client [" + JSON.stringify(options) + "]connected.");
+                                RED.log.info("wamp client [" + JSON.stringify(options) + "] connected.");
                                 obj.wampSession = session;
                                 obj._connected = true;
                                 obj._emitter.emit("ready");

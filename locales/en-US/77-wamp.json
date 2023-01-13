@@ -18,7 +18,9 @@
       "router": "Router",
       "destination": "Destination",
       "procedure": "Procedure",
-      "realm": "Realm"
+      "realm": "Realm",
+      "authId": "Auth ID",
+      "password": "Password"
     },
     "placeholder": {
       "subscriber": {
@@ -29,7 +31,9 @@
       },
       "procedure": "procedure",
       "router": "ws://127.0.0.1:9995/",
-      "realm": "realm01"
+      "realm": "realm01",
+      "authId": "example@example.com",
+      "password": "password"
     }
   }
 }
