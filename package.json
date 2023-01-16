@@ -1,13 +1,13 @@
 {
   "name": "node-red-contrib-wamp-auth",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node-RED nodes to talk to WAMP with auth",
   "dependencies": {
     "autobahn": "22.11.1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sparktime/node-red-contrib-wamp.git"
+    "url": "https://github.com/Sparktime/node-red-contrib-wamp-auth.git"
   },
   "license": "Apache-2.0",
   "keywords": [

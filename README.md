@@ -1,7 +1,8 @@
 node-red-contrib-wamp-auth
 ===================
 
-A <a href="http://nodered.org" target="_new">Node-RED</a> node to wrap wamp client as one of these roles (publisher, subscriber, caller and callee).
+A <a href="http://nodered.org" target="_new">Node-RED</a> node to wrap wamp client (with authentication) as one of these roles (publisher, subscriber, caller and callee).
+Forked from <a href="https://www.npmjs.com/package/node-red-contrib-wamp" target="_new">node-red-contrib-wamp</a>.
 
 Install
 -------
