@@ -157,7 +157,7 @@
                style="width: 45%;">
         <br>
         <label for="node-config-input-realm" style="margin-left: 15px; width: 85px; "> <span
-                data-i18n="wamp.label.realm"></span></label>
+                  data-i18n="wamp.label.realm"></span></label>
         <input type="text" id="node-config-input-realm" data-i18n="[placeholder]wamp.placeholder.realm"
                style="width: 45%;">
         <br>
@@ -184,9 +184,13 @@
         defaults: {             // defines the editable properties of the node
             address: {required: true},
             realm: {required: true},
-            authId: {required: false},
-            password: {required: false},
+            // authId: {required: true},
+            // password: {required: true},
             name: {}
+        },
+        credentials: {
+            authId: {type:"text"},
+            password: {type:"password"}
         },
         label: function() {     // sets the default label contents
             return (this.name?this.name:this.realm+"@"+this.address);
