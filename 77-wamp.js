@@ -288,7 +288,7 @@ module.exports = function (RED) {
                                 url: address,
                                 realm: realm,
                                 retry_if_unreachable: true,
-                                max_retries: 25,
+                                max_retries: 10,
                                 initial_retry_delay: 3,
                                 authmethods: ['wampcra'],
                                 authid: authid,
@@ -340,14 +340,23 @@ module.exports = function (RED) {
                             };
 
                             obj.wampConnection.onclose = function (reason, details) {
+                                RED.log.error("DEBUG: Connection closed reason:");
+                                RED.log.error(JSON.stringify(reason));
+                                RED.log.error("DEBUG: Connection closed details:");
+                                RED.log.error(JSON.stringify(details));
                                 obj._connecting = false;
                                 obj._connected = false;
                                 if (!obj._closing) {
-                                    // RED.log.error("unexpected close", {uri:uri});
+                                    RED.log.error("unexpected close", {uri:uri});
                                     obj._emitter.emit("closed");
                                 }
                                 obj._subscribeMap = {};
                                 RED.log.info("wamp client closed");
+                                setTimeout(function () {
+                                    RED.log.error("DEBUG: Connection reopened");
+                                    obj.wampConnection.open();
+                                }, 5000);
+
                             };
 
                             obj.wampConnection.open();
