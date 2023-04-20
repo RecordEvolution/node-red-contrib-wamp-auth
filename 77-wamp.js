@@ -2,16 +2,23 @@ module.exports = function (RED) {
   "use strict";
   var events = require("events");
   var autobahn = require("autobahn");
-  var settings = RED.settings;
-  var cryptojs = require("crypto-js");
 
   function WampClientNode(config) {
     RED.nodes.createNode(this, config);
 
     this.address = config.address;
     this.realm = config.realm;
-    this.authId = this.credentials.authId;
-    this.password = this.credentials.password;
+
+    // get Device Serialnumber von environment
+    const deviceSerialNumber = process.env.DEVICE_SERIAL_NUMBER;
+    if (!deviceSerialNumber) {
+      RED.log.error("Environment Variable DEVICE_SERIAL_NUMBER not found!");
+    } else {
+      RED.log.info("Using DEVICE_SERIAL_NUMBER from environment");
+    }
+
+    this.authId = deviceSerialNumber;
+    this.password = deviceSerialNumber;
 
     this.wampClient = function () {
       return wampClientPool.get(
@@ -30,12 +37,7 @@ module.exports = function (RED) {
     };
   }
 
-  RED.nodes.registerType("wamp-client", WampClientNode, {
-    credentials: {
-      authId: { type: "text" },
-      password: { type: "password" },
-    },
-  });
+  RED.nodes.registerType("wamp-client", WampClientNode);
 
   function WampClientOutNode(config) {
     RED.nodes.createNode(this, config);
@@ -348,6 +350,14 @@ module.exports = function (RED) {
               obj._connecting = true;
               obj._connected = false;
               obj._emitter.emit("closed");
+              RED.log.info(
+                `trying to connect to router ${JSON.stringify({
+                  address,
+                  realm,
+                  authid,
+                  password,
+                })}`
+              );
               var options = {
                 url: address,
                 realm: realm,
@@ -357,14 +367,7 @@ module.exports = function (RED) {
                 authmethods: ["wampcra"],
                 authid: authid,
                 onchallenge: function (session, method, extra) {
-                  var derivedKey = cryptojs
-                    .PBKDF2(password, extra.salt, {
-                      iterations: extra.iterations,
-                      hasher: cryptojs.algo.SHA256,
-                      keySize: (extra.keylen * 8) / 32,
-                    })
-                    .toString(cryptojs.enc.Base64);
-                  return autobahn.auth_cra.sign(derivedKey, extra.challenge);
+                  return autobahn.auth_cra.sign(password, extra.challenge);
                 },
               };
 
@@ -434,11 +437,18 @@ module.exports = function (RED) {
                   obj._emitter.emit("closed");
                 }
                 obj._subscribeMap = {};
-                RED.log.info("wamp client closed");
-                setTimeout(function () {
-                  RED.log.error("DEBUG: Connection reopened");
-                  obj.wampConnection.open();
-                }, 5000);
+                RED.log.info("wamp client closed!");
+                // setTimeout(function () {
+                //   RED.log.error("DEBUG: Connection reopened");
+                //   RED.log.info("Now open() again");
+                //   try {
+                //     obj.wampConnection.open();
+                //   } catch (e) {
+                //     RED.log.error("Error when opening after 5000 ms");
+                //     RED.log.trace(e);
+                //     throw e;
+                //   }
+                // }, 5000);
               };
 
               obj.wampConnection.open();

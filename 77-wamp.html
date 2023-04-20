@@ -21,7 +21,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="wamp in">
-   <p>Connects to a WAMP router and subscribes a topic or registers a procedure to listen on.</p>
+   <p>Connects to the RecordEvolution router and subscribes a topic or registers a procedure to listen on.</p>
    <p>Outputs an object called <code>msg</code> containing <code>msg.topic</code> (or <code>msg.procedure</code>) and
    <code>msg.payload</code>. msg.payload contains args, which is an array or null and kwargs, which is an object or null.</p>
 </script>
@@ -29,20 +29,21 @@
 <script type="text/javascript">
     RED.nodes.registerType('wamp in',{
         category: 'input',      // the palette category
+        paletteLabel: "RE in",
         defaults: {             // defines the editable properties of the node
             role: {value: "subscriber", required: true},
             router: {type: "wamp-client", required: true},
-            topic: {value:"", required: true},
+            topic: {value:"re.hello.world", required: true},
             name: {value:""}
         },
-        color:"#79d8bf",
+        color:"#50748f",
         inputs:0,               // set the number of inputs - only 0 or 1
         outputs:1,              // set the number of outputs - 0 to n
         // set the icon (held in icons dir below where you save the node)
         icon: "bridge.png",     // saved in  icons/myicon.png
         label: function() {     // sets the default label contents
             var wampNode = RED.nodes.node(this.router);
-            return this.name || this.topic || (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
+            return this.name || this.topic || "RE in" // (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
         },
         labelStyle: function() { // sets the class to apply to the label
             return this.name?"node_label_italic":"";
@@ -74,7 +75,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="wamp out">
-   <p>Connects to WAMP router and publishes messages or returns callee's result.</p>
+   <p>Connects to the RecordEvolution router and publishes messages or returns callee's result.</p>
    <p>Only the <code>msg.payload</code> is sent.</p>
    <p>When in Callee Response role, the topic is not used.</p>
 </script>
@@ -82,20 +83,21 @@
 <script type="text/javascript">
     RED.nodes.registerType('wamp out',{
         category: 'output',      // the palette category
+        paletteLabel: "RE out",
         defaults: {             // defines the editable properties of the node
             role: {value: "publisher", required: true},
             router: {type: "wamp-client", required: true},
             topic: {value:"", required: false},
             name: {value:""}
         },
-        color:"#79d8bf",
+        color:"#50748f",
         inputs:1,
         outputs:0,
         icon: "white-globe.png",
         align: "right",
         label: function() {     // sets the default label contents
             var wampNode = RED.nodes.node(this.router);
-            return this.name || this.topic || (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
+            return this.name || this.topic || "RE out" //(wampNode ? wampNode.label() : this._("wamp.label.wamp"));
         },
         labelStyle: function() { // sets the class to apply to the label
             return this.name?"node_label_italic":"";
@@ -122,26 +124,27 @@
 </script>
 
 <script type="text/x-red" data-help-name="wamp call">
-   <p>Provides a connection to other WAMP client.</p>
+   <p>Calls a procedure on the RecordEvolution router.</p>
    <p>Only the <code>msg.payload</code> is sent.</p>
 </script>
 
 <script type="text/javascript">
     RED.nodes.registerType('wamp call',{
         category: 'function',      // the palette category
+        paletteLabel: "RE call",
         defaults: {             // defines the editable properties of the node
             router: {type: "wamp-client", required: true},
             procedure: {value:"", required: true},
             name: {value:""}
         },
-        color:"#79d8bf",
+        color:"#50748f",
         inputs:1,
         outputs:1,
         icon: "arrow-in.png",
         align: "right",
         label: function() {
             var wampNode = RED.nodes.node(this.router);
-            return this.name || this.procedure || (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
+            return this.name || this.procedure || "RE call"//(wampNode ? wampNode.label() : this._("wamp.label.wamp"));
         },
         labelStyle: function() { // sets the class to apply to the label
             return this.name?"node_label_italic":"";
@@ -160,16 +163,6 @@
                   data-i18n="wamp.label.realm"></span></label>
         <input type="text" id="node-config-input-realm" data-i18n="[placeholder]wamp.placeholder.realm"
                style="width: 45%;">
-        <br>
-        <label for="node-config-input-authId" style="margin-left: 15px; width: 85px; "> <span
-                data-i18n="wamp.label.authId"></span></label>
-        <input type="text" id="node-config-input-authId" data-i18n="[placeholder]wamp.placeholder.authId"
-               style="width: 45%;">
-        <br>
-        <label for="node-config-input-password" style="margin-left: 15px; width: 85px; "> <span
-                data-i18n="wamp.label.password"></span></label>
-        <input type="password" id="node-config-input-password" data-i18n="[placeholder]wamp.placeholder.password"
-               style="width: 45%;">
     </div>
     <div class="form-row">
         <label for="node-config-input-name"><i class="fa fa-tag"></i> <span
@@ -182,18 +175,12 @@
     RED.nodes.registerType('wamp-client',{
         category: 'config',      // the palette category
         defaults: {             // defines the editable properties of the node
-            address: {required: true},
-            realm: {required: true},
-            // authId: {required: true},
-            // password: {required: true},
-            name: {}
-        },
-        credentials: {
-            authId: {type:"text"},
-            password: {type:"password"}
+            address: {value: "wss://cbw.record-evolution.com/ws-ua-usr", required: true},
+            realm: {value: "userapps", required: true},
+            name: {value: "RecordEvolution-Router"}
         },
         label: function() {     // sets the default label contents
-            return (this.name?this.name:this.realm+"@"+this.address);
+            return "RecordEvolution-Router";
         }
     });
 </script>
