@@ -1,13 +1,81 @@
 module.exports = function (RED) {
   "use strict";
-  var events = require("events");
-  var autobahn = require("autobahn");
+  const events = require("events");
+  const autobahn = require("autobahn");
+
+  let SWARM_KEY, APP_KEY, ENV, CB_REALM, DATAPODS_WS_URI, STUDIO_WS_URI_OLD, STUDIO_WS_URI, LOCALHOST_WS_URI, socketURIMap;
+
+  try {
+    SWARM_KEY = process.env["SWARM_KEY"];
+    if (!SWARM_KEY) {
+      throw new Error("Environment variable SWARM_KEY not set!");
+    }
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+
+  try {
+    APP_KEY = process.env["APP_KEY"];
+    if (!APP_KEY) {
+      throw new Error("Environment variable APP_KEY not set!");
+    }
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+
+  try {
+    ENV = process.env["ENV"]?.toLowerCase();
+    if (!ENV) {
+      throw new Error("Environment variable ENV not set!");
+    }
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
+
+  CB_REALM = `realm-${SWARM_KEY}-${APP_KEY}-${ENV}`;
+
+  DATAPODS_WS_URI = "wss://cbw.datapods.io/ws-ua-usr";
+  STUDIO_WS_URI_OLD = "wss://cbw.record-evolution.com/ws-ua-usr";
+  STUDIO_WS_URI = "wss://cbw.ironflock.com/ws-ua-usr";
+  LOCALHOST_WS_URI = "ws://localhost:8080/ws-ua-usr";
+
+  socketURIMap = {
+    "https://studio.datapods.io": DATAPODS_WS_URI,
+    "https://studio.record-evolution.com": STUDIO_WS_URI_OLD,
+    "https://studio.ironflock.com": STUDIO_WS_URI,
+    "http://localhost:8085": LOCALHOST_WS_URI,
+  };
+
+
+  function getWebSocketURI() {
+    const reswarm_url = process.env.RESWARM_URL;
+    if (!reswarm_url) {
+      return STUDIO_WS_URI;
+    }
+    return socketURIMap[reswarm_url];
+  }
+
+
+  function getSerialNumber(serial_number) {
+    let s_num = serial_number;
+    if (serial_number === undefined || serial_number === null) {
+      s_num = process.env.DEVICE_SERIAL_NUMBER;
+      if (s_num === undefined || s_num === null) {
+        throw new Error("ENV Variable 'DEVICE_SERIAL_NUMBER' is not set!");
+      }
+    }
+    return s_num;
+  }
+
 
   function WampClientNode(config) {
     RED.nodes.createNode(this, config);
 
-    this.address = config.address;
-    this.realm = config.realm;
+    this.address = getWebSocketURI()
+    this.realm = CB_REALM
 
     // get Device Serialnumber von environment
     const deviceSerialNumber = process.env.DEVICE_SERIAL_NUMBER;
@@ -39,10 +107,9 @@ module.exports = function (RED) {
 
   RED.nodes.registerType("wamp-client", WampClientNode);
 
-  function WampClientOutNode(config) {
+  function WampClientPublishNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = config.router;
-    this.role = config.role;
+    this.router = getWebSocketURI;
     this.topic = config.topic;
     this.clientNode = RED.nodes.getNode(this.router);
 
@@ -68,26 +135,14 @@ module.exports = function (RED) {
       node.on("input", function (msg) {
         if (msg.hasOwnProperty("payload")) {
           var payload = msg.payload;
-          switch (this.role) {
-            case "publisher":
-              RED.log.info(
-                "wamp client publish: topic=" +
-                  this.topic +
-                  ", payload=" +
-                  JSON.stringify(payload)
-              );
-              payload && node.wampClient.publish(this.topic, payload);
-              break;
-            case "calleeResponse":
-              RED.log.info(
-                "wamp client callee response=" + JSON.stringify(payload)
-              );
-              msg._d && msg._d.resolve(payload);
-              break;
-            default:
-              RED.log.error("the role [" + this.role + "] is not recognized.");
-              break;
-          }
+
+          RED.log.info(
+            "wamp client publish: topic=" +
+              this.topic +
+              ", payload=" +
+              JSON.stringify(payload)
+          );
+          payload && node.wampClient.publish(this.topic, payload);
         }
       });
     } else {
@@ -103,12 +158,11 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("wamp out", WampClientOutNode);
+  RED.nodes.registerType("IronFlock publish", WampClientPublishNode);
 
-  function WampClientInNode(config) {
+  function WampClientSubscribeNode(config) {
     RED.nodes.createNode(this, config);
-    this.role = config.role;
-    this.router = config.router;
+    this.router = getWebSocketURI;
     this.topic = config.topic;
 
     this.clientNode = RED.nodes.getNode(this.router);
@@ -132,36 +186,14 @@ module.exports = function (RED) {
         });
       });
 
-      switch (this.role) {
-        case "subscriber":
-          node.wampClient.subscribe(this.topic, function (args, kwargs) {
-            var msg = {
-              topic: this.topic,
-              payload: { args: args, kwargs: kwargs },
-            };
-            node.send(msg);
-          });
-          break;
-        case "calleeReceiver":
-          node.wampClient.registerProcedure(
-            this.topic,
-            function (args, kwargs) {
-              RED.log.debug("procedure: " + args + ", " + kwargs);
-              var d = autobahn.when.defer(); // create a deferred
-              var msg = {
-                procedure: this.topic,
-                payload: { args: args, kwargs: kwargs },
-                _d: d,
-              };
-              node.send(msg);
-              return d.promise;
-            }
-          );
-          break;
-        default:
-          RED.log.error("the role [" + this.role + "] is not recognized.");
-          break;
-      }
+      node.wampClient.subscribe(this.topic, function (args, kwargs) {
+        var msg = {
+          topic: this.topic,
+          payload: { args: args, kwargs: kwargs },
+        };
+        node.send(msg);
+      });
+
     } else {
       RED.log.error("wamp client config is missing!");
     }
@@ -175,12 +207,68 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("wamp in", WampClientInNode);
+  RED.nodes.registerType("IronFlock subscribe", WampClientSubscribeNode);
+
+  function WampClientRegisterNode(config) {
+    RED.nodes.createNode(this, config);
+    this.router = getWebSocketURI;
+    this.topic = config.topic;
+
+    this.clientNode = RED.nodes.getNode(this.router);
+
+    if (this.clientNode) {
+      var node = this;
+      node.wampClient = this.clientNode.wampClient();
+
+      this.clientNode.on("ready", function () {
+        node.status({
+          fill: "green",
+          shape: "dot",
+          text: "node-red:common.status.connected",
+        });
+      });
+      this.clientNode.on("closed", function () {
+        node.status({
+          fill: "red",
+          shape: "ring",
+          text: "node-red:common.status.not-connected",
+        });
+      });
+
+      node.wampClient.registerProcedure(
+        this.topic,
+        function (args, kwargs) {
+          RED.log.debug("procedure: " + args + ", " + kwargs);
+          var d = autobahn.when.defer(); // create a deferred
+          var msg = {
+            procedure: this.topic,
+            payload: { args: args, kwargs: kwargs },
+            _d: d,
+          };
+          node.send(msg);
+          return d.promise;
+        }
+      );
+
+    } else {
+      RED.log.error("wamp client config is missing!");
+    }
+
+    this.on("close", function (done) {
+      if (this.clientNode) {
+        this.clientNode.close(done);
+      } else {
+        done();
+      }
+    });
+  }
+
+  RED.nodes.registerType("IronFlock register", WampClientRegisterNode);
 
   function WampClientCallNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = config.router;
-    this.procedure = config.procedure;
+    this.router = getWebSocketURI;
+    this.topic = config.topic;
 
     this.clientNode = RED.nodes.getNode(this.router);
 
@@ -204,8 +292,8 @@ module.exports = function (RED) {
       });
 
       node.on("input", function (msg) {
-        if (this.procedure) {
-          var d = node.wampClient.callProcedure(this.procedure, msg.payload);
+        if (this.topic) {
+          var d = node.wampClient.callProcedure(this.topic, msg.payload);
           if (d) {
             d.then(
               function (resp) {
@@ -232,7 +320,7 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("wamp call", WampClientCallNode);
+  RED.nodes.registerType("IronFlock call", WampClientCallNode);
 
   var wampClientPool = (function () {
     var connections = {};

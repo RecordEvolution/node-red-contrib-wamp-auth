@@ -1,18 +1,21 @@
 {
-  "name": "@recordevolution/node-red-contrib-wamp-auth",
-  "version": "0.0.4",
-  "description": "Node-RED nodes to talk to WAMP with auth",
+  "name": "@record-evolution/node-red-ironflock",
+  "version": "0.1.0",
+  "description": "Node-RED node to talk to IronFlock",
   "dependencies": {
     "autobahn": "22.11.1"
   },
+  "scripts": {
+    "release": "npm version patch --tag-version-prefix='' && git push && git push --tag"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/RecordEvolution/node-red-contrib-wamp-auth"
+    "url": "https://github.com/RecordEvolution/node-red-ironflock"
   },
   "license": "Apache-2.0",
   "keywords": [
     "node-red",
-    "wamp"
+    "ironflock"
   ],
   "node-red": {
     "version": ">=0.14.0",
@@ -24,6 +27,6 @@
     "node": ">=12.0.0"
   },
   "author": {
-    "name": "RecordEvolution"
+    "name": "IronFlock"
   }
 }

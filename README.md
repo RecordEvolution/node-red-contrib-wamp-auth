@@ -1,4 +1,4 @@
-node-red-contrib-wamp-auth
+node-red-ironflock
 ===================
 
 A <a href="http://nodered.org" target="_new">Node-RED</a> node to wrap wamp client (with authentication) as one of these roles (publisher, subscriber, caller and callee).
@@ -9,7 +9,7 @@ Install
 
 Run the following command in your Node-RED user directory - typically `~/.node-red`
 
-    npm install node-red-contrib-wamp-auth
+    npm install @record-evolution/node-red-ironflock
 
 
 Usage
