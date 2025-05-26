@@ -21,8 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install --omit-dev --frozen-lockfile
 
-      - name: Build
-        run: npm run build
+      # - name: Build
+      #   run: npm run build
 
       - name: Login to npm
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
