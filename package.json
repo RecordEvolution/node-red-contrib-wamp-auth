@@ -1,6 +1,6 @@
 {
   "name": "@record-evolution/node-red-ironflock",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Node-RED node to talk to IronFlock",
   "dependencies": {
     "autobahn": "22.11.1"
