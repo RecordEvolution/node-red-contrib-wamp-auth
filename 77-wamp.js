@@ -123,7 +123,7 @@ module.exports = function (RED) {
         if (msg.hasOwnProperty("payload")) {
           var payload = msg.payload;
 
-          RED.log.info(
+          RED.log.debug(
             "wamp client publish: topic=" +
               topic +
               ", payload=" +
@@ -176,6 +176,12 @@ module.exports = function (RED) {
           topic: topic,
           payload: { args: args, kwargs: kwargs },
         };
+        RED.log.debug(
+            "wamp recived: topic=" +
+              topic +
+              ", payload=" +
+              JSON.stringify(payload)
+          );
         node.send(msg);
       });
 
@@ -228,6 +234,12 @@ module.exports = function (RED) {
             payload: { args: args, kwargs: kwargs },
             _d: d,
           };
+          RED.log.debug(
+            "wamp procedure result: topic=" +
+              topic +
+              ", payload=" +
+              JSON.stringify(payload)
+          );
           node.send(msg);
           return d.promise;
         }
