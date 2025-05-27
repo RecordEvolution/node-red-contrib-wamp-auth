@@ -58,24 +58,12 @@ module.exports = function (RED) {
     return socketURIMap[reswarm_url];
   }
 
-
-  function getSerialNumber(serial_number) {
-    let s_num = serial_number;
-    if (serial_number === undefined || serial_number === null) {
-      s_num = process.env.DEVICE_SERIAL_NUMBER;
-      if (s_num === undefined || s_num === null) {
-        throw new Error("ENV Variable 'DEVICE_SERIAL_NUMBER' is not set!");
-      }
-    }
-    return s_num;
-  }
-
-
   function WampClientNode(config) {
     RED.nodes.createNode(this, config);
 
     this.address = getWebSocketURI()
-    this.realm = CB_REALM
+
+    this.realm = `realm-${SWARM_KEY}-${config.appKey ?? APP_KEY}-${ENV}`;
 
     // get Device Serialnumber von environment
     const deviceSerialNumber = process.env.DEVICE_SERIAL_NUMBER;
@@ -105,13 +93,12 @@ module.exports = function (RED) {
     };
   }
 
-  RED.nodes.registerType("wamp-client", WampClientNode);
+  RED.nodes.registerType("IronFlock App", WampClientNode);
 
   function WampClientPublishNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = getWebSocketURI;
-    this.topic = config.topic;
-    this.clientNode = RED.nodes.getNode(this.router);
+    this.clientNode = RED.nodes.getNode(config.appRealm);
+    const topic = `${SWARM_KEY}-${this.clientNode?.appKey ?? APP_KEY}-${config.table}`;
 
     if (this.clientNode) {
       var node = this;
@@ -138,11 +125,11 @@ module.exports = function (RED) {
 
           RED.log.info(
             "wamp client publish: topic=" +
-              this.topic +
+              topic +
               ", payload=" +
               JSON.stringify(payload)
           );
-          payload && node.wampClient.publish(this.topic, payload);
+          payload && node.wampClient.publish(topic, payload);
         }
       });
     } else {
@@ -158,14 +145,12 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("IronFlock publish", WampClientPublishNode);
+  RED.nodes.registerType("IronFlock out", WampClientPublishNode);
 
   function WampClientSubscribeNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = getWebSocketURI;
-    this.topic = config.topic;
-
-    this.clientNode = RED.nodes.getNode(this.router);
+    this.clientNode = RED.nodes.getNode(config.appRealm);
+    const topic = `${SWARM_KEY}-${this.clientNode?.appKey ?? APP_KEY}-${config.table}`;
 
     if (this.clientNode) {
       var node = this;
@@ -186,9 +171,9 @@ module.exports = function (RED) {
         });
       });
 
-      node.wampClient.subscribe(this.topic, function (args, kwargs) {
+      node.wampClient.subscribe(topic, function (args, kwargs) {
         var msg = {
-          topic: this.topic,
+          topic: topic,
           payload: { args: args, kwargs: kwargs },
         };
         node.send(msg);
@@ -207,14 +192,12 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("IronFlock subscribe", WampClientSubscribeNode);
+  RED.nodes.registerType("IronFlock in", WampClientSubscribeNode);
 
   function WampClientRegisterNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = getWebSocketURI;
-    this.topic = config.topic;
-
-    this.clientNode = RED.nodes.getNode(this.router);
+    this.clientNode = RED.nodes.getNode(config.appRealm);
+    const topic = `${SWARM_KEY}-${this.clientNode?.appKey ?? APP_KEY}-${config.table}`;
 
     if (this.clientNode) {
       var node = this;
@@ -236,12 +219,12 @@ module.exports = function (RED) {
       });
 
       node.wampClient.registerProcedure(
-        this.topic,
+        topic,
         function (args, kwargs) {
           RED.log.debug("procedure: " + args + ", " + kwargs);
           var d = autobahn.when.defer(); // create a deferred
           var msg = {
-            procedure: this.topic,
+            procedure: topic,
             payload: { args: args, kwargs: kwargs },
             _d: d,
           };
@@ -267,10 +250,9 @@ module.exports = function (RED) {
 
   function WampClientCallNode(config) {
     RED.nodes.createNode(this, config);
-    this.router = getWebSocketURI;
-    this.topic = config.topic;
 
-    this.clientNode = RED.nodes.getNode(this.router);
+    this.clientNode = RED.nodes.getNode(config.appRealm);
+    const topic = config.topic;
 
     if (this.clientNode) {
       var node = this;
@@ -292,8 +274,8 @@ module.exports = function (RED) {
       });
 
       node.on("input", function (msg) {
-        if (this.topic) {
-          var d = node.wampClient.callProcedure(this.topic, msg.payload);
+        if (topic) {
+          var d = node.wampClient.callProcedure(topic, msg.payload);
           if (d) {
             d.then(
               function (resp) {

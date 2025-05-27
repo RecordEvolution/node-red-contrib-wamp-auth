@@ -2,38 +2,19 @@
   "wamp": {
     "label": {
       "wamp": "wamp",
-      "role": "Role",
-      "subscriber": {
-        "role": {
-          "subscriber": "Subscriber",
-          "calleeReceiver": "Callee Receiver"
-        }
-      },
-      "publisher": {
-        "role": {
-          "publisher": "Publisher",
-          "calleeResponse": "Callee Response"
-        }
-      },
+      "table": "Table",
+      "topic": "Topic",
       "router": "Router",
-      "destination": "Destination",
-      "procedure": "Procedure",
       "realm": "Realm",
-      "authId": "Auth ID",
-      "password": "Password"
+      "appKey": "App Key",
+      "appRealm": "App",
+      "appName": "App Name"
     },
     "placeholder": {
-      "subscriber": {
-        "destination": "topic or procedure"
-      },
-      "publisher": {
-        "destination": "topic or procedure"
-      },
-      "procedure": "procedure",
-      "router": "ws://127.0.0.1:9995/",
-      "realm": "realm01",
-      "authId": "example@example.com",
-      "password": "password"
+      "table": "table name",
+      "topic": "topic name",
+      "appKey": "Leave empty to use the current app",
+      "appName": "IronFlock App Name"
     }
   }
 }

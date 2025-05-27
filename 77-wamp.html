@@ -1,198 +1,301 @@
-<script type="text/x-red" data-template-name="IronFlock subscribe">
-
-    <div class="form-row">
-        <label for="node-input-topic" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.destination"></span></label>
-        <input type="text" id="node-input-topic" data-i18n="[placeholder]wamp.placeholder.subscriber.destination">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
+<script type="text/x-red" data-template-name="IronFlock in">
+  <div class="form-row">
+      <label for="node-input-appRealm" style="width: 110px;"><i class="fa fa-random"></i> <span data-i18n="wamp.label.appRealm"></span></label>
+      <select id="node-input-appRealm"></select>
+  </div>
+  <div class="form-row">
+      <label for="node-input-table" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.table"></span></label>
+      <input type="text" id="node-input-table" data-i18n="[placeholder]wamp.placeholder.table">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+      <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
 </script>
 
-<script type="text/x-red" data-help-name="IronFlock subscribe">
-   <p>Connects to the IronFlock message cluster and subscribes to a topic.</p>
-   <p>Outputs an object called <code>msg</code> containing <code>msg.topic</code> (or <code>msg.procedure</code>) and
-   <code>msg.payload</code>. msg.payload contains args, which is an array or null and kwargs, which is an object or null.</p>
-</script>
-
-<script type="text/javascript">
-    RED.nodes.registerType('IronFlock subscribe',{
-        category: 'input',      // the palette category
-        paletteLabel: "IronFlock subscribe",
-        defaults: {             // defines the editable properties of the node
-            topic: {value:"re.hello.world", required: true},
-            name: {value:""}
-        },
-        color:"#8d80af",
-        inputs:0,               // set the number of inputs - only 0 or 1
-        outputs:1,              // set the number of outputs - 0 to n
-        // set the icon (held in icons dir below where you save the node)
-        icon: "bridge.png",     // saved in  icons/myicon.png
-        label: function() {     // sets the default label contents
-            var wampNode = RED.nodes.node(this.router);
-            return this.name || this.topic || "IronFlock subscribe" // (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
-        },
-        labelStyle: function() { // sets the class to apply to the label
-            return this.name?"node_label_italic":"";
-        }
-    });
-</script>
-
-<script type="text/x-red" data-template-name="IronFlock register">
-    <div class="form-row">
-        <label for="node-input-topic" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.destination"></span></label>
-        <input type="text" id="node-input-topic" data-i18n="[placeholder]wamp.placeholder.subscriber.destination">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
-</script>
-
-<script type="text/x-red" data-help-name="IronFlock register">
-   <p>Connects to the IronFlock message cluster and registers a procedure to listen on a topic.</p>
-   <p>Outputs an object called <code>msg</code> containing <code>msg.topic</code> (or <code>msg.procedure</code>) and
-   <code>msg.payload</code>. msg.payload contains args, which is an array or null and kwargs, which is an object or null.</p>
+<script type="text/x-red" data-help-name="IronFlock in">
+  <p>Connects to the IronFlock message cluster and subscribes to a table.</p>
+  <p>Outputs an object called <code>msg</code> containing <code>msg.table</code> (or <code>msg.procedure</code>) and
+  <code>msg.payload</code>. msg.payload contains args, which is an array or null and kwargs, which is an object or null.</p>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('IronFlock register">',{
-        category: 'input',      // the palette category
-        paletteLabel: "IronFlock register",
-        defaults: {             // defines the editable properties of the node
-            topic: {value:"re.hello.world", required: true},
-            name: {value:""}
-        },
-        color:"#8d80af",
-        inputs:0,               // set the number of inputs - only 0 or 1
-        outputs:1,              // set the number of outputs - 0 to n
-        // set the icon (held in icons dir below where you save the node)
-        icon: "bridge.png",     // saved in  icons/myicon.png
-        label: function() {     // sets the default label contents
-            var wampNode = RED.nodes.node(this.router);
-            return this.name || this.topic || "IronFlock register" // (wampNode ? wampNode.label() : this._("wamp.label.wamp"));
-        },
-        labelStyle: function() { // sets the class to apply to the label
-            return this.name?"node_label_italic":"";
+  RED.nodes.registerType("IronFlock in", {
+    category: "network",
+    paletteLabel: "IronFlock in",
+    defaults: {
+      appRealm: { value: "", type: "IronFlock App", required: true },
+      table: { value: "sensordata", required: true },
+      name: { value: "" },
+    },
+    color: "#8d80af",
+    inputs: 0,
+    outputs: 1,
+    icon: "bridge.svg",
+    label: function () {
+      const appRealmConfig = RED.nodes.node(this.appRealm);
+      return (
+        this.name ||
+        (appRealmConfig
+          ? appRealmConfig.appName + "/" + this.table
+          : this.table) ||
+        "IronFlock in"
+      );
+    },
+    labelStyle: function () {
+      return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function () {
+      const node = this;
+      const select = $("#node-input-appRealm");
+      select.empty(); // Clear existing options to prevent duplicates on re-open
+
+      // Add an empty option for the default/unselected state
+      select.append(
+        $("<option></option>")
+          .attr("value", "")
+          .text("Select an App from this Fleet")
+      );
+
+      const appRealms = [];
+      RED.nodes.eachConfig((configNode) => {
+        if (configNode.type === "IronFlock App") {
+          appRealms.push(configNode);
         }
-    });
+      });
+
+      console.log("IronFlock in: Found WAMP Routers:", appRealms);
+
+      appRealms?.forEach((router) => {
+        select.append(
+          $("<option></option>")
+            .attr("value", router.id)
+            .text(router.appName || router.appKey || router.id)
+        ); // Use ID if name/appKey missing
+      });
+
+      // Set the selected value if the node already has one
+      if (node.appRealm) {
+        console.log("IronFlock in: Setting appRealm to", node.appRealm);
+        select.val(node.appRealm);
+      }
+    },
+  });
 </script>
 
-<script type="text/x-red" data-template-name="IronFlock publish">
-    <div class="form-row">
-        <label for="node-input-topic" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.destination"></label>
-        <input type="text" id="node-input-topic" data-i18n="[placeholder]wamp.placeholder.publisher.destination">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
+<script type="text/x-red" data-template-name="IronFlock out">
+  <div class="form-row">
+      <label for="node-input-appRealm" style="width: 110px;"><i class="fa fa-random"></i> <span data-i18n="wamp.label.appRealm"></span></label>
+      <select id="node-input-appRealm"></select>
+  </div>
+  <div class="form-row">
+      <label for="node-input-table" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.table"></span></label>
+      <input type="text" id="node-input-table" data-i18n="[placeholder]wamp.placeholder.table">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+      <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
 </script>
 
-<script type="text/x-red" data-help-name="IronFlock publish">
-   <p>Connects to the IronFlock message cluster and publishes messages on the given topic.</p>
-   <p>Only the <code>msg.payload</code> is sent.</p>
+<script type="text/x-red" data-help-name="IronFlock out">
+  <p>Connects to the IronFlock message cluster and publishes messages to the given table.</p>
+  <p>Only the <code>msg.payload</code> is sent.</p>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('IronFlock publish">',{
-        category: 'output',      // the palette category
-        paletteLabel: "IronFlock publish",
-        defaults: {             // defines the editable properties of the node
-            topic: {value:"", required: true},
-            name: {value:""}
-        },
-        color:"#8d80af",
-        inputs:1,
-        outputs:0,
-        icon: "white-globe.png",
-        align: "right",
-        label: function() {     // sets the default label contents
-            var wampNode = RED.nodes.node(this.router);
-            return this.name || this.topic || "IronFlock publish" //(wampNode ? wampNode.label() : this._("wamp.label.wamp"));
-        },
-        labelStyle: function() { // sets the class to apply to the label
-            return this.name?"node_label_italic":"";
+  RED.nodes.registerType("IronFlock out", {
+    category: "network", // the palette category
+    paletteLabel: "IronFlock out",
+    defaults: {
+      // defines the editable properties of the node
+      appRealm: { value: "", type: "IronFlock App", required: true },
+      table: { value: "sensordata", required: true },
+      name: { value: "" },
+    },
+    color: "#8d80af",
+    inputs: 1, // set the number of inputs - only 0 or 1
+    outputs: 0, // set the number of outputs - 0 to n
+    icon: "bridge.svg",
+    label: function () {
+      const appRealmConfig = RED.nodes.node(this.appRealm);
+      return (
+        this.name ||
+        (appRealmConfig
+          ? appRealmConfig.appName + "/" + this.table
+          : this.table) ||
+        "IronFlock out"
+      );
+    },
+    labelStyle: function () {
+      // sets the class to apply to the label
+      return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function () {
+      const node = this;
+      const select = $("#node-input-appRealm");
+      select.empty(); // Clear existing options to prevent duplicates on re-open
+
+      // Add an empty option for the default/unselected state
+      select.append(
+        $("<option></option>")
+          .attr("value", "")
+          .text("Select an App from this Fleet")
+      );
+
+      const appRealms = [];
+      RED.nodes.eachConfig((configNode) => {
+        if (configNode.type === "IronFlock App") {
+          appRealms.push(configNode);
         }
-    });
+      });
+
+      console.log("IronFlock in: Found WAMP Routers:", appRealms);
+
+      appRealms.forEach((router) => {
+        select.append(
+          $("<option></option>")
+            .attr("value", router.id)
+            .text(router.appName || router.appKey || router.id)
+        ); // Use ID if name/appKey missing
+      });
+
+      // Set the selected value if the node already has one
+      if (node.appRealm) {
+        select.val(node.appRealm);
+      }
+    },
+    oneditsave: function () {
+      this.label =
+        this.name ||
+        (this.appRealm
+          ? this.appRealm.appName + "/" + this.table
+          : this.table) ||
+        "IronFlock in";
+    },
+  });
 </script>
-
-
 
 <script type="text/x-red" data-template-name="IronFlock call">
-    <div class="form-row node-input-router">
-        <label for="node-input-router" style="width: 110px;"><i class="fa fa-bookmark"></i> <span data-i18n="wamp.label.router"></span></label>
-        <input type="text" id="node-input-router">
-    </div>
-    <div class="form-row">
-        <label for="node-input-procedure" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.procedure"></span></label>
-        <input type="text" id="node-input-procedure" data-i18n="[placeholder]wamp.placeholder.procedure">
-    </div>
-    <div class="form-row">
-        <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
-
+  <div class="form-row">
+      <label for="node-input-appRealm" style="width: 110px;"><i class="fa fa-random"></i> <span data-i18n="wamp.label.appRealm"></span></label>
+      <select id="node-input-appRealm"></select>
+  </div>
+  <div class="form-row">
+      <label for="node-input-topic" style="width: 110px;"><i class="fa fa-envelope"></i> <span data-i18n="wamp.label.topic"></span></label>
+      <input type="text" id="node-input-topic" data-i18n="[placeholder]wamp.placeholder.topic">
+  </div>
+  <div class="form-row">
+      <label for="node-input-name" style="width: 110px;"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
+      <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
+  </div>
 </script>
 
 <script type="text/x-red" data-help-name="IronFlock call">
-   <p>Calls a procedure by topic on the IronFlock message cluster.</p>
-   <p>Only the <code>msg.payload</code> is sent.</p>
+  <p>Calls a procedure by topic on the IronFlock message realm of the given app.</p>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('IronFlock call',{
-        category: 'function',      // the palette category
-        paletteLabel: "IronFlock call",
-        defaults: {             // defines the editable properties of the node
-            topic: {value:"", required: true},
-            name: {value: ""}
-        },
-        color:"#8d80af",
-        inputs:1,
-        outputs:1,
-        icon: "arrow-in.png",
-        align: "right",
-        label: function() {
-            var wampNode = RED.nodes.node(this.router);
-            return this.name || this.procedure || "IronFlock call"//(wampNode ? wampNode.label() : this._("wamp.label.wamp"));
-        },
-        labelStyle: function() { // sets the class to apply to the label
-            return this.name?"node_label_italic":"";
+  RED.nodes.registerType("IronFlock call", {
+    category: "network", // the palette category
+    paletteLabel: "IronFlock call",
+    defaults: {
+      // defines the editable properties of the node
+      appRealm: { value: "", type: "IronFlock App", required: true },
+      topic: { value: "my.remote.procedure", required: true },
+      name: { value: "" },
+    },
+    color: "#8d80af",
+    inputs: 1,
+    outputs: 1,
+    icon: "arrow-in.svg",
+    align: "left",
+    label: function () {
+      const appRealmConfig = RED.nodes.node(this.appRealm);
+      return (
+        this.name ||
+        (appRealmConfig
+          ? appRealmConfig.appName + "/" + this.topic
+          : this.topic) ||
+        "IronFlock call"
+      );
+    },
+    labelStyle: function () {
+      // sets the class to apply to the label
+      return this.name ? "node_label_italic" : "";
+    },
+    oneditprepare: function () {
+      const node = this;
+      const select = $("#node-input-appRealm");
+      select.empty(); // Clear existing options to prevent duplicates on re-open
+
+      // Add an empty option for the default/unselected state
+      select.append(
+        $("<option></option>")
+          .attr("value", "")
+          .text("Select an App from this Fleet")
+      );
+
+      const appRealms = [];
+      RED.nodes.eachConfig((configNode) => {
+        if (configNode.type === "IronFlock App") {
+          appRealms.push(configNode);
         }
-    });
+      });
+
+      console.log("IronFlock in: Found WAMP Routers:", appRealms);
+
+      appRealms.forEach((router) => {
+        select.append(
+          $("<option></option>")
+            .attr("value", router.id)
+            .text(router.appName || router.appKey || router.id)
+        ); // Use ID if name/appKey missing
+      });
+
+      // Set the selected value if the node already has one
+      if (node.appRealm) {
+        select.val(node.appRealm);
+      }
+    },
+    oneditsave: function () {
+      this.label =
+        this.name ||
+        (this.appRealm
+          ? this.appRealm.appName + "/" + this.topic
+          : this.topic) ||
+        "IronFlock in";
+    },
+  });
 </script>
 
-<script type="text/x-red" data-template-name="wamp-client">
-    <div class="form-row node-input-router">
-        <label for="node-config-input-address"><i class="fa fa-bookmark"></i> <span
-                data-i18n="wamp.label.router"></span></label>
-        <input type="text" id="node-config-input-address" data-i18n="[placeholder]wamp.placeholder.router"
-               style="width: 45%;">
-        <br>
-        <label for="node-config-input-realm" style="margin-left: 15px; width: 85px; "> <span
-                  data-i18n="wamp.label.realm"></span></label>
-        <input type="text" id="node-config-input-realm" data-i18n="[placeholder]wamp.placeholder.realm"
-               style="width: 45%;">
-    </div>
-    <div class="form-row">
-        <label for="node-config-input-name"><i class="fa fa-tag"></i> <span
-                data-i18n="node-red:common.label.name"></span></label>
-        <input type="text" id="node-config-input-name" data-i18n="[placeholder]node-red:common.label.name">
-    </div>
+<script type="text/x-red" data-template-name="IronFlock App">
+  <div class="form-row node-input-router">
+      <label for="node-config-input-appKey" style="margin-left: 15px; width: 85px; "><i class="fa fa-random"></i> <span data-i18n="wamp.label.appKey"></span></label>
+      <input type="number" id="node-config-input-appKey" data-i18n="[placeholder]wamp.placeholder.appKey" style="width: 45%;">
+  </div>
+  <div class="form-row">
+      <label for="node-config-input-appName"><i class="fa fa-tag"></i> <span data-i18n="wamp.label.appName"></span></label>
+      <input type="text" id="node-config-input-appName" data-i18n="[placeholder]wamp.label.appName">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="IronFlock App">
+  <p>Sets up a connection to the messaging realm of an App installed in this fleet.</p>
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('wamp-client',{
-        category: 'config',      // the palette category
-        defaults: {             // defines the editable properties of the node
-            address: {value: "wss://cbw.record-evolution.com/ws-ua-usr", required: true},
-            realm: {value: "userapps", required: true},
-            name: {value: "IronFlock-Router"}
-        },
-        label: function() {     // sets the default label contents
-            return "IronFlock-Router";
-        }
-    });
+  RED.nodes.registerType("IronFlock App", {
+    category: "config", // the palette category
+    defaults: {
+      // defines the editable properties of the node
+      appKey: { value: "" },
+      appName: { value: "", required: true },
+    },
+    color: "#8d80af",
+    icon: "cog.svg",
+    label: function () {
+      return this.appName || this.appKey || "IronFlock App";
+    },
+  });
 </script>
