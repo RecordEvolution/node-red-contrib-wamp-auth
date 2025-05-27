@@ -180,7 +180,7 @@ module.exports = function (RED) {
             "wamp recived: topic=" +
               topic +
               ", payload=" +
-              JSON.stringify(payload)
+              JSON.stringify(msg.payload)
           );
         node.send(msg);
       });
@@ -230,7 +230,7 @@ module.exports = function (RED) {
           RED.log.debug("procedure: " + args + ", " + kwargs);
           var d = autobahn.when.defer(); // create a deferred
           var msg = {
-            procedure: topic,
+            topic: topic,
             payload: { args: args, kwargs: kwargs },
             _d: d,
           };
@@ -238,7 +238,7 @@ module.exports = function (RED) {
             "wamp procedure result: topic=" +
               topic +
               ", payload=" +
-              JSON.stringify(payload)
+              JSON.stringify(msg.payload)
           );
           node.send(msg);
           return d.promise;
