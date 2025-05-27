@@ -1,11 +1,13 @@
 node-red-ironflock
 ===================
 
-A <a href="http://nodered.org" target="_new">Node-RED</a> node to wrap wamp client (with authentication) as one of these roles (publisher, subscriber, caller and callee).
+A <a href="http://nodered.org" target="_new">Node-RED</a> node to integrate the node-RED app into the IronFlock IoT Platform.
 Forked from <a href="https://www.npmjs.com/package/node-red-contrib-wamp" target="_new">node-red-contrib-wamp</a>.
 
-Install
--------
+This plugin is preinstalled in the [Node-RED app](https://studio.ironflock.com/en/apps/Node-RED_Runner) in the IronFlock IoT App Store and **only works in this context**.
+
+Development
+-----------
 
 Run the following command in your Node-RED user directory - typically `~/.node-red`
 
@@ -14,4 +16,7 @@ Run the following command in your Node-RED user directory - typically `~/.node-r
 
 Usage
 -----
-Connects to a WAMP router to publish and subscribe messages according to one topic or call remote WAMP client or register a callee for remote client to call it.
+
+The nodes allow you to interact with data sent by other apps on your device fleet. You can subscribe to a "table" to receive all data that is inserted into the apps table.
+You can also publish transformed data to a table of an app on your fleet.
+Finally apps can register procedures under a topic. You can call these procedures with the IronFlock call-node from the node-RED app.
